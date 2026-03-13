@@ -17,16 +17,16 @@
 <div class="stats-grid">
     <div class="stat-card income">
         <div class="label">Total Income</div>
-        <div class="value">${{ "%.2f" | format(total_income) }}</div>
+        <div class="value">₵{{ "%.2f" | format(total_income) }}</div>
     </div>
     <div class="stat-card expense">
         <div class="label">Total Expenses</div>
-        <div class="value">${{ "%.2f" | format(total_expenses) }}</div>
+        <div class="value">₵{{ "%.2f" | format(total_expenses) }}</div>
     </div>
     <div class="stat-card net">
         <div class="label">Net Balance</div>
         <div class="value {% if net_balance < 0 %}amount-negative{% endif %}">
-            ${{ "%.2f" | format(net_balance) }}
+            ₵{{ "%.2f" | format(net_balance) }}
         </div>
     </div>
 </div>
@@ -74,7 +74,7 @@
                     <td>{{ t['category'] }}</td>
                     <td style="color:var(--text-dim)">{{ t['note'] or '—' }}</td>
                     <td style="text-align:right" class="{% if t['type'] == 'income' %}amount-positive{% else %}amount-negative{% endif %}">
-                        {% if t['type'] == 'income' %}+{% else %}-{% endif %}${{ "%.2f" | format(t['amount']) }}
+                        {% if t['type'] == 'income' %}+{% else %}-{% endif %}₵{{ "%.2f" | format(t['amount']) }}
                     </td>
                 </tr>
                 {% endfor %}
