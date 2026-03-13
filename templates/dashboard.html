@@ -39,7 +39,7 @@
     </div>
     <div class="chart-card">
         <h3>Spending by Category</h3>
-        <img src="/static/charts/spending_by_category.png?t={{  cache_bust }}" alt="Spending by Category">
+        <img src="/static/charts/spending_by_category.png?t={{ cache_bust }}" alt="Spending by Category">
     </div>
     <div class="chart-card">
         <h3>Trend Over Time</h3>
@@ -55,30 +55,32 @@
     </div>
 
     {% if transactions %}
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Note</th>
-                <th style="text-align:right">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in transactions[:5] %}
-            <tr>
-                <td style="color:var(--text-dim)">{{ t['date'] }}</td>
-                <td><span class="badge badge-{{ t['type'] }}">{{ t['type'] }}</span></td>
-                <td>{{ t['category'] }}</td>
-                <td style="color:var(--text-dim)">{{ t['note'] or '—' }}</td>
-                <td style="text-align:right" class="{% if t['type'] == 'income' %}amount-positive{% else %}amount-negative{% endif %}">
-                    {% if t['type'] == 'income' %}+{% else %}-{% endif %}${{ "%.2f" | format(t['amount']) }}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Note</th>
+                    <th style="text-align:right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions[:5] %}
+                <tr>
+                    <td style="color:var(--text-dim)">{{ t['date'] }}</td>
+                    <td><span class="badge badge-{{ t['type'] }}">{{ t['type'] }}</span></td>
+                    <td>{{ t['category'] }}</td>
+                    <td style="color:var(--text-dim)">{{ t['note'] or '—' }}</td>
+                    <td style="text-align:right" class="{% if t['type'] == 'income' %}amount-positive{% else %}amount-negative{% endif %}">
+                        {% if t['type'] == 'income' %}+{% else %}-{% endif %}${{ "%.2f" | format(t['amount']) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
     <div class="empty-state">No transactions found for this period.</div>
     {% endif %}
