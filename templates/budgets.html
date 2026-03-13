@@ -23,7 +23,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Monthly Limit ($)</label>
+                <label>Monthly Limit (₵)</label>
                 <input type="number" name="monthly_limit" step="0.01" min="1" placeholder="0.00" required>
             </div>
             <div class="form-group" style="justify-content:flex-end">
@@ -49,7 +49,7 @@
             <div class="budget-item-header">
                 <span class="cat">{{ budget['category'] }}</span>
                 <span class="amounts">
-                    ${{ "%.2f" | format(spent) }} / ${{ "%.2f" | format(budget['monthly_limit']) }}
+                    ₵{{ "%.2f" | format(spent) }} / ₵{{ "%.2f" | format(budget['monthly_limit']) }}
                     &nbsp;·&nbsp; {{ pct }}%
                 </span>
             </div>
