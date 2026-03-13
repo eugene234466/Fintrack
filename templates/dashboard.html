@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — FinTrack{% endblock %}
+
+{% block content %}
+<div class="flex-between">
+    <div class="page-header" style="margin-bottom:0">
+        <h1>Dashboard</h1>
+        <p>{{ period | capitalize }} overview</p>
+    </div>
+    <div class="period-toggle">
+        <a href="/?period=weekly"  class="{% if period == 'weekly' %}active{% endif %}">Weekly</a>
+        <a href="/?period=monthly" class="{% if period == 'monthly' %}active{% endif %}">Monthly</a>
+    </div>
+</div>
+
+<!-- SUMMARY STATS -->
+<div class="stats-grid">
+    <div class="stat-card income">
+        <div class="label">Total Income</div>
+        <div class="value">${{ "%.2f" | format(total_income) }}</div>
+    </div>
+    <div class="stat-card expense">
+        <div class="label">Total Expenses</div>
+        <div class="value">${{ "%.2f" | format(total_expenses) }}</div>
+    </div>
+    <div class="stat-card net">
+        <div class="label">Net Balance</div>
+        <div class="value {% if net_balance < 0 %}amount-negative{% endif %}">
+            ${{ "%.2f" | format(net_balance) }}
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts-grid">
+    <div class="chart-card wide">
+        <h3>Income vs Expenses</h3>
+        <img src="/static/charts/income_vs_expenses.png?t={{ cache_bust }}" alt="Income vs Expenses">
+    </div>
+    <div class="chart-card">
+        <h3>Spending by Category</h3>
+        <img src="/static/charts/spending_by_category.png?t={{  cache_bust }}" alt="Spending by Category">
+    </div>
+    <div class="chart-card">
+        <h3>Trend Over Time</h3>
+        <img src="/static/charts/trend_over_time.png?t={{ cache_bust }}" alt="Trend Over Time">
+    </div>
+</div>
+
+<!-- RECENT TRANSACTIONS -->
+<div class="card mt-2">
+    <div class="flex-between" style="margin-bottom:1rem">
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">Recent Transactions</h3>
+        <a href="/transactions" class="btn btn-primary">View All</a>
+    </div>
+
+    {% if transactions %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Note</th>
+                <th style="text-align:right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions[:5] %}
+            <tr>
+                <td style="color:var(--text-dim)">{{ t['date'] }}</td>
+                <td><span class="badge badge-{{ t['type'] }}">{{ t['type'] }}</span></td>
+                <td>{{ t['category'] }}</td>
+                <td style="color:var(--text-dim)">{{ t['note'] or '—' }}</td>
+                <td style="text-align:right" class="{% if t['type'] == 'income' %}amount-positive{% else %}amount-negative{% endif %}">
+                    {% if t['type'] == 'income' %}+{% else %}-{% endif %}${{ "%.2f" | format(t['amount']) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No transactions found for this period.</div>
+    {% endif %}
+</div>
+{% endblock %}

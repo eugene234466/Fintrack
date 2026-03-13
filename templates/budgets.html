@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Budgets — FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Budgets</h1>
+    <p>Set monthly spending limits per category</p>
+</div>
+
+<!-- SET BUDGET FORM -->
+<div class="card">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:1.25rem;">
+        Set Budget Limit
+    </h3>
+    <form method="POST" action="/budgets">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monthly Limit ($)</label>
+                <input type="number" name="monthly_limit" step="0.01" min="1" placeholder="0.00" required>
+            </div>
+            <div class="form-group" style="justify-content:flex-end">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">Save Budget</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- BUDGET PROGRESS -->
+<div class="card mt-2">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:1.5rem;">
+        Monthly Progress
+    </h3>
+
+    {% if budgets %}
+        {% for budget in budgets %}
+        {% set spent = spending.get(budget['category'], 0) %}
+        {% set pct = (spent / budget['monthly_limit'] * 100) | round(1) %}
+        {% set fill_class = 'safe' if pct < 70 else ('warn' if pct < 90 else 'danger') %}
+        <div class="budget-item">
+            <div class="budget-item-header">
+                <span class="cat">{{ budget['category'] }}</span>
+                <span class="amounts">
+                    ${{ "%.2f" | format(spent) }} / ${{ "%.2f" | format(budget['monthly_limit']) }}
+                    &nbsp;·&nbsp; {{ pct }}%
+                </span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill {{ fill_class }}"
+                     style="width: {% if pct > 100 %}100{% else %}{{ pct }}{% endif %}%">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">No budgets set yet. Add one above.</div>
+    {% endif %}
+</div>
+{% endblock %}
