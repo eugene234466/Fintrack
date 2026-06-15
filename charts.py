@@ -3,15 +3,16 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import os
+import tempfile
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CHARTS_DIR = os.path.join(BASE_DIR, "static", "charts")
+# ✅ Use writable temp directory (Vercel safe)
+CHARTS_DIR = os.path.join(tempfile.gettempdir(), "charts")
+
 
 def ensure_charts_dir():
-    if not os.path.exists(CHARTS_DIR):
-        os.makedirs(CHARTS_DIR)
+    os.makedirs(CHARTS_DIR, exist_ok=True)
 
 
 def get_period_labels(period):
@@ -36,6 +37,7 @@ def get_period_labels(period):
 
 def group_by_period(transactions, period):
     grouped = defaultdict(lambda: {"income": 0, "expense": 0})
+
     if period == "weekly":
         today = datetime.now().date()
         for transaction in transactions:
@@ -58,29 +60,46 @@ def group_by_period(transactions, period):
                     grouped[month_name]["income"] += transaction['amount']
                 else:
                     grouped[month_name]["expense"] += transaction['amount']
+
     return grouped
 
 
 def generate_income_vs_expenses(transactions, period):
     ensure_charts_dir()
+
     labels = get_period_labels(period)
     grouped = group_by_period(transactions, period)
+
     income_totals = [grouped[l]["income"] for l in labels]
     expense_totals = [grouped[l]["expense"] for l in labels]
 
     fig, ax = plt.subplots(figsize=(10, 6))
+
     bar_width = 0.35
     x_positions = range(len(labels))
 
-    income_bars = ax.bar([x - bar_width/2 for x in x_positions],
-                         income_totals, bar_width, label='Income', color='green', alpha=0.7)
-    expense_bars = ax.bar([x + bar_width/2 for x in x_positions],
-                          expense_totals, bar_width, label='Expenses', color='red', alpha=0.7)
+    income_bars = ax.bar(
+        [x - bar_width / 2 for x in x_positions],
+        income_totals,
+        bar_width,
+        label='Income',
+        color='green',
+        alpha=0.7
+    )
+
+    expense_bars = ax.bar(
+        [x + bar_width / 2 for x in x_positions],
+        expense_totals,
+        bar_width,
+        label='Expenses',
+        color='red',
+        alpha=0.7
+    )
 
     ax.set_xlabel(period.capitalize())
     ax.set_ylabel('Amount (₵)')
     ax.set_title(f'Income vs Expenses ({period.capitalize()} View)')
-    ax.set_xticks(x_positions)
+    ax.set_xticks(list(x_positions))
     ax.set_xticklabels(labels)
     ax.legend()
 
@@ -88,8 +107,14 @@ def generate_income_vs_expenses(transactions, period):
         for bar in bars:
             height = bar.get_height()
             if height > 0:
-                ax.text(bar.get_x() + bar.get_width()/2., height,
-                       f'₵{height:,.0f}', ha='center', va='bottom', fontsize=8)
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2.,
+                    height,
+                    f'₵{height:,.0f}',
+                    ha='center',
+                    va='bottom',
+                    fontsize=8
+                )
 
     plt.tight_layout()
     plt.savefig(os.path.join(CHARTS_DIR, 'income_vs_expenses.png'), dpi=100, bbox_inches='tight')
@@ -98,18 +123,23 @@ def generate_income_vs_expenses(transactions, period):
 
 def generate_spending_by_category(transactions, period):
     ensure_charts_dir()
+
     expenses = [t for t in transactions if t['type'] == 'expense']
 
     if period == "weekly":
         today = datetime.now().date()
         week_ago = today - timedelta(days=7)
-        expenses = [t for t in expenses
-                   if datetime.strptime(t['date'], '%Y-%m-%d').date() >= week_ago]
+        expenses = [
+            t for t in expenses
+            if datetime.strptime(t['date'], '%Y-%m-%d').date() >= week_ago
+        ]
     else:
         today = datetime.now()
         six_months_ago = today - timedelta(days=180)
-        expenses = [t for t in expenses
-                   if datetime.strptime(t['date'], '%Y-%m-%d') >= six_months_ago]
+        expenses = [
+            t for t in expenses
+            if datetime.strptime(t['date'], '%Y-%m-%d') >= six_months_ago
+        ]
 
     category_totals = defaultdict(float)
     for transaction in expenses:
@@ -129,8 +159,14 @@ def generate_spending_by_category(transactions, period):
     sizes = list(category_totals.values())
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%',
-                                       startangle=90, colors=plt.cm.Set3.colors)
+    wedges, texts, autotexts = ax.pie(
+        sizes,
+        labels=labels,
+        autopct='%1.1f%%',
+        startangle=90,
+        colors=plt.cm.Set3.colors
+    )
+
     for autotext in autotexts:
         autotext.set_color('black')
         autotext.set_fontweight('bold')
@@ -145,38 +181,67 @@ def generate_spending_by_category(transactions, period):
 
 def generate_trend_over_time(transactions, period):
     ensure_charts_dir()
+
     labels = get_period_labels(period)
     grouped = group_by_period(transactions, period)
+
     net_totals = [grouped[l]["income"] - grouped[l]["expense"] for l in labels]
 
     fig, ax = plt.subplots(figsize=(10, 6))
     x_positions = range(len(labels))
 
-    ax.plot(x_positions, net_totals, marker='o', linewidth=2,
-            markersize=8, color='blue', label='Net Income')
+    ax.plot(
+        x_positions,
+        net_totals,
+        marker='o',
+        linewidth=2,
+        markersize=8,
+        color='blue',
+        label='Net Income'
+    )
+
     ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.7)
-    ax.fill_between(x_positions, net_totals, 0,
-                    where=[n > 0 for n in net_totals],
-                    color='green', alpha=0.3, label='Profit')
-    ax.fill_between(x_positions, net_totals, 0,
-                    where=[n < 0 for n in net_totals],
-                    color='red', alpha=0.3, label='Loss')
+
+    ax.fill_between(
+        x_positions,
+        net_totals,
+        0,
+        where=[n > 0 for n in net_totals],
+        color='green',
+        alpha=0.3,
+        label='Profit'
+    )
+
+    ax.fill_between(
+        x_positions,
+        net_totals,
+        0,
+        where=[n < 0 for n in net_totals],
+        color='red',
+        alpha=0.3,
+        label='Loss'
+    )
 
     ax.set_xlabel(period.capitalize())
     ax.set_ylabel('Net Amount (₵)')
     ax.set_title(f'Financial Trend Over Time ({period.capitalize()} View)')
-    ax.set_xticks(x_positions)
+    ax.set_xticks(list(x_positions))
     ax.set_xticklabels(labels)
     ax.legend()
 
     for i, value in enumerate(net_totals):
-        ax.annotate(f'₵{value:,.0f}',
-                   (x_positions[i], value),
-                   textcoords="offset points",
-                   xytext=(0, 10 if value >= 0 else -15),
-                   ha='center', fontsize=9, fontweight='bold')
+        ax.annotate(
+            f'₵{value:,.0f}',
+            (x_positions[i], value),
+            textcoords="offset points",
+            xytext=(0, 10 if value >= 0 else -15),
+            ha='center',
+            fontsize=9,
+            fontweight='bold'
+        )
 
     ax.grid(True, alpha=0.3)
+
     plt.tight_layout()
     plt.savefig(os.path.join(CHARTS_DIR, 'trend_over_time.png'), dpi=100, bbox_inches='tight')
     plt.close(fig)
