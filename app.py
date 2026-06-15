@@ -23,7 +23,9 @@ def index():
     
     net_balance = total_income - total_expenses
     
-    generate_all_charts(transactions, period)
+
+    if os.getenv("VERCEL") != "1":
+        generate_all_charts(transactions, period)
     
     return render_template(
         'dashboard.html',
