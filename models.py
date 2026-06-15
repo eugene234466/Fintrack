@@ -1,10 +1,12 @@
 import sqlite3
-import os
 from datetime import datetime, timedelta
 import tempfile
+import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(tempfile.gettempdir(), "filenam.db")
+DATABASE = os.path.join(tempfile.gettempdir(), "finance.db")
+
+# Ensure directory exists (important!)
+os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
 
 def get_connection():
     conn = sqlite3.connect(DATABASE)
