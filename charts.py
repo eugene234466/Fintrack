@@ -239,15 +239,14 @@ def generate_trend_over_time(transactions, period):
         
         ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.7)
         
-        # Fill areas
-        for i, val in enumerate(net_totals):
-            if i < len(net_totals) - 1:
-                x_vals = [x_positions[i], x_positions[i+1]]
-                y_vals = [net_totals[i], net_totals[i+1]]
-                if all(v >= 0 for v in y_vals):
-                    ax.fill_between(x_vals, y_vals, 0, color='green', alpha=0.3)
-                elif all(v <= 0 for v in y_vals):
-                    ax.fill_between(x_vals, y_vals, 0, color='red', alpha=0.3)
+        # Fill areas for profit/loss
+        for i in range(len(net_totals) - 1):
+            x_vals = [x_positions[i], x_positions[i+1]]
+            y_vals = [net_totals[i], net_totals[i+1]]
+            if all(v >= 0 for v in y_vals):
+                ax.fill_between(x_vals, y_vals, 0, color='green', alpha=0.3, label='Profit' if i == 0 else "")
+            elif all(v <= 0 for v in y_vals):
+                ax.fill_between(x_vals, y_vals, 0, color='red', alpha=0.3, label='Loss' if i == 0 else "")
         
         ax.set_xlabel(period.capitalize())
         ax.set_ylabel('Net Amount (₵)')
@@ -275,7 +274,7 @@ def generate_trend_over_time(transactions, period):
         return None
 
 def generate_all_charts(transactions, period):
-    """Generate all charts and return as base64 data URLs"""
+    """Generate all charts and return as base64 strings"""
     return {
         'income_vs_expenses': generate_income_vs_expenses(transactions, period),
         'spending_by_category': generate_spending_by_category(transactions, period),
