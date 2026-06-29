@@ -35,15 +35,27 @@
 <div class="charts-grid">
     <div class="chart-card wide">
         <h3>Income vs Expenses</h3>
-        <img src="/static/charts/income_vs_expenses.png?t={{ cache_bust }}" alt="Income vs Expenses">
+        {% if charts.income_vs_expenses %}
+            <img src="{{ charts.income_vs_expenses }}" alt="Income vs Expenses">
+        {% else %}
+            <div class="empty-state">No data available</div>
+        {% endif %}
     </div>
     <div class="chart-card">
         <h3>Spending by Category</h3>
-        <img src="/static/charts/spending_by_category.png?t={{ cache_bust }}" alt="Spending by Category">
+        {% if charts.spending_by_category %}
+            <img src="{{ charts.spending_by_category }}" alt="Spending by Category">
+        {% else %}
+            <div class="empty-state">No data available</div>
+        {% endif %}
     </div>
     <div class="chart-card">
         <h3>Trend Over Time</h3>
-        <img src="/static/charts/trend_over_time.png?t={{ cache_bust }}" alt="Trend Over Time">
+        {% if charts.trend_over_time %}
+            <img src="{{ charts.trend_over_time }}" alt="Trend Over Time">
+        {% else %}
+            <div class="empty-state">No data available</div>
+        {% endif %}
     </div>
 </div>
 
