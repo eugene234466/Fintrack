@@ -1,3 +1,4 @@
+# app.py
 import time
 import os
 from flask import Flask, render_template, request, redirect, url_for
@@ -32,9 +33,15 @@ def index():
 
     net_balance = total_income - total_expenses
 
-    # ✅ Prevent file writing on Vercel
-    if os.getenv("VERCEL") != "1":
-        generate_all_charts(transactions, period)
+    # ✅ Generate charts as base64 (works on Vercel and locally)
+    charts = generate_all_charts(transactions, period)
+    
+    # Convert to data URLs for display in HTML
+    chart_data_urls = {
+        'income_vs_expenses': f'data:image/png;base64,{charts["income_vs_expenses"]}' if charts["income_vs_expenses"] else None,
+        'spending_by_category': f'data:image/png;base64,{charts["spending_by_category"]}' if charts["spending_by_category"] else None,
+        'trend_over_time': f'data:image/png;base64,{charts["trend_over_time"]}' if charts["trend_over_time"] else None
+    }
 
     return render_template(
         'dashboard.html',
@@ -44,14 +51,15 @@ def index():
         total_expenses=total_expenses,
         net_balance=net_balance,
         cache_bust=int(time.time()),
-        categories=categories
+        categories=categories,
+        charts=chart_data_urls  # ✅ Pass charts to template
     )
 
 
 @app.route("/transactions", methods=["GET", "POST"])
 def transactions_view():
     if request.method == "POST":
-        txn_type = request.form['type']  # ✅ renamed from "type"
+        txn_type = request.form['type']
         amount = float(request.form['amount'])
         category = request.form['category']
         date = request.form['date']
@@ -71,7 +79,6 @@ def transactions_view():
     )
 
 
-# ✅ Safer: use POST instead of GET
 @app.route("/transactions/delete/<int:id>", methods=["POST"])
 def delete_transaction_view(id):
     period = request.args.get('period', 'weekly')
