@@ -33,7 +33,7 @@ def index():
 
     net_balance = total_income - total_expenses
 
-    # ✅ Generate charts as base64 data URLs
+    # ✅ Generate charts as base64 data URLs (works on Vercel)
     charts = generate_all_charts(transactions, period)
     
     # Convert to data URLs for display in HTML
@@ -79,6 +79,7 @@ def transactions_view():
     )
 
 
+# ✅ Keep transaction deletion (POST method for security)
 @app.route("/transactions/delete/<int:id>", methods=["POST"])
 def delete_transaction_view(id):
     period = request.args.get('period', 'weekly')
