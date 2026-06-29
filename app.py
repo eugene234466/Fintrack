@@ -33,14 +33,14 @@ def index():
 
     net_balance = total_income - total_expenses
 
-    # ✅ Generate charts as base64 (works on Vercel and locally)
+    # ✅ Generate charts as base64 data URLs
     charts = generate_all_charts(transactions, period)
     
     # Convert to data URLs for display in HTML
     chart_data_urls = {
-        'income_vs_expenses': f'data:image/png;base64,{charts["income_vs_expenses"]}' if charts["income_vs_expenses"] else None,
-        'spending_by_category': f'data:image/png;base64,{charts["spending_by_category"]}' if charts["spending_by_category"] else None,
-        'trend_over_time': f'data:image/png;base64,{charts["trend_over_time"]}' if charts["trend_over_time"] else None
+        'income_vs_expenses': f'data:image/png;base64,{charts["income_vs_expenses"]}' if charts.get("income_vs_expenses") else None,
+        'spending_by_category': f'data:image/png;base64,{charts["spending_by_category"]}' if charts.get("spending_by_category") else None,
+        'trend_over_time': f'data:image/png;base64,{charts["trend_over_time"]}' if charts.get("trend_over_time") else None
     }
 
     return render_template(
