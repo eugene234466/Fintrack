@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}FinTrack{% endblock %}</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00e676">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FinTrack">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Track income, expenses, and budget goals">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg:         #0a0c0f;
+            --surface:    #111318;
+            --border:     #1e2128;
+            --accent:     #00e676;
+            --accent2:    #00b0ff;
+            --danger:     #ff4d6d;
+            --muted:      #4a5060;
+            --text:       #e8eaf0;
+            --text-dim:   #7a8099;
+            --nav-h:      64px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        /* ── NAV DESKTOP ── */
+        nav.topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: var(--nav-h);
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .nav-logo span { color: var(--text-dim); }
+
+        .nav-links {
+            display: flex;
+            gap: 0.25rem;
+            list-style: none;
+        }
+        .nav-links a {
+            display: block;
+            padding: 0.4rem 0.9rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+        .nav-links a:hover,
+        .nav-links a.active { color: var(--accent); background: rgba(0,230,118,0.07); }
+
+        /* Hamburger */
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+        .nav-toggle span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.25s;
+        }
+        .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-toggle.open span:nth-child(2) { opacity: 0; }
+        .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* Mobile drawer */
+        .nav-drawer {
+            display: none;
+            position: fixed;
+            top: var(--nav-h);
+            left: 0; right: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            z-index: 190;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .nav-drawer.open { display: flex; }
+        .nav-drawer a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .nav-drawer a:hover,
+        .nav-drawer a.active { color: var(--accent); background: rgba(0,230,118,0.07); }
+
+        /* ── LAYOUT ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        /* ── PAGE HEADER ── */
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2rem;
+            letter-spacing: -0.03em;
+            color: var(--text);
+        }
+        .page-header p { color: var(--text-dim); margin-top: 0.25rem; font-size: 0.8rem; }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        /* ── PERIOD TOGGLE ── */
+        .period-toggle {
+            display: inline-flex;
+            background: var(--border);
+            border-radius: 6px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .period-toggle a {
+            padding: 0.35rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            transition: all 0.15s;
+        }
+        .period-toggle a.active { background: var(--accent); color: #000; font-weight: 500; }
+
+        /* ── STATS GRID ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+        }
+        .stat-card .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+        .stat-card.income .value  { color: var(--accent); }
+        .stat-card.expense .value { color: var(--danger); }
+        .stat-card.net .value     { color: var(--accent2); }
+
+        /* ── TABLE ── */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        thead th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        tbody td { padding: 0.85rem 1rem; color: var(--text); }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .badge-income  { background: rgba(0,230,118,0.1); color: var(--accent); }
+        .badge-expense { background: rgba(255,77,109,0.1); color: var(--danger); }
+
+        /* ── FORMS ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: max(16px, 0.85rem); /* prevents iOS zoom */
+            transition: border-color 0.15s;
+            width: 100%;
+        }
+        .form-group input:focus,
+        .form-group select:focus { outline: none; border-color: var(--accent); }
+        .form-group select option { background: var(--surface); }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn-primary { background: var(--accent); color: #000; font-weight: 500; }
+        .btn-primary:hover { background: #00ff88; }
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid rgba(255,77,109,0.3);
+            padding: 0.3rem 0.7rem;
+            font-size: 0.7rem;
+        }
+        .btn-danger:hover { background: rgba(255,77,109,0.1); }
+
+        /* ── CHARTS ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+        .chart-card.wide { grid-column: span 2; }
+        .chart-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+        .chart-card img { width: 100%; border-radius: 6px; display: block; }
+
+        /* ── BUDGET PROGRESS ── */
+        .budget-item { margin-bottom: 1.25rem; }
+        .budget-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+            gap: 0.5rem;
+        }
+        .budget-item-header .cat { font-size: 0.85rem; }
+        .budget-item-header .amounts { font-size: 0.75rem; color: var(--text-dim); white-space: nowrap; }
+        .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+        .progress-fill.safe   { background: var(--accent); }
+        .progress-fill.warn   { background: #ffb300; }
+        .progress-fill.danger { background: var(--danger); }
+
+        /* ── UTILITY ── */
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-dim); font-size: 0.85rem; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
+        .amount-positive { color: var(--accent); }
+        .amount-negative { color: var(--danger); }
+        .mt-1 { margin-top: 1rem; }
+        .mt-2 { margin-top: 2rem; }
+
+        /* ── BOTTOM NAV (mobile only) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 0.5rem 0;
+            padding-bottom: calc(0.5rem + var(--safe-bottom));
+            z-index: 200;
+        }
+        .bottom-nav ul { display: flex; list-style: none; justify-content: space-around; }
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            transition: color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bottom-nav a.active,
+        .bottom-nav a:hover { color: var(--accent); }
+        .bottom-nav .icon { font-size: 1.2rem; line-height: 1; }
+
+        /* ── INSTALL BANNER ── */
+        #install-banner {
+            display: none;
+            position: fixed;
+            bottom: calc(70px + var(--safe-bottom));
+            left: 1rem; right: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 1rem;
+            z-index: 300;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+        #install-banner p { font-size: 0.8rem; color: var(--text); }
+        #install-banner p span { display: block; font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem; }
+        #install-banner .banner-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .btn-dismiss {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 0.4rem 0.7rem;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ── RESPONSIVE: TABLET ── */
+        @media (max-width: 768px) {
+            .nav-toggle { display: flex; }
+            .nav-links  { display: none; }
+            .bottom-nav { display: block; }
+
+            .container {
+                padding: 1.5rem 1rem;
+                padding-bottom: calc(80px + var(--safe-bottom));
+            }
+
+            .page-header h1 { font-size: 1.5rem; }
+            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .stat-card .value { font-size: 1.4rem; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.wide { grid-column: span 1; }
+            .flex-between { flex-wrap: wrap; }
+            .form-grid { grid-template-columns: 1fr; }
+            .budget-item-header { flex-direction: column; align-items: flex-start; }
+        }
+
+        /* ── RESPONSIVE: PHONE ── */
+        @media (max-width: 480px) {
+            nav.topnav { padding: 0 1rem; }
+            .page-header h1 { font-size: 1.3rem; }
+            .card { padding: 1rem; }
+            .stat-card { padding: 1rem; }
+            .stat-card .value { font-size: 1.2rem; }
+            .period-toggle a { padding: 0.35rem 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+    <a href="/" class="nav-logo">fin<span>track</span></a>
+    <ul class="nav-links">
+        <li><a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/transactions" class="{% if request.endpoint == 'transactions_view' %}active{% endif %}">Transactions</a></li>
+        <li><a href="/budgets" class="{% if request.endpoint == 'budgets_view' %}active{% endif %}">Budgets</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="nav-drawer" id="navDrawer">
+    <a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">📊 Dashboard</a>
+    <a href="/transactions" class="{% if request.endpoint == 'transactions_view' %}active{% endif %}">💸 Transactions</a>
+    <a href="/budgets" class="{% if request.endpoint == 'budgets_view' %}active{% endif %}">🎯 Budgets</a>
+</div>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav">
+    <ul>
+        <li>
+            <a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">
+                <span class="icon">📊</span>Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="/transactions" class="{% if request.endpoint == 'transactions_view' %}active{% endif %}">
+                <span class="icon">💸</span>Transactions
+            </a>
+        </li>
+        <li>
+            <a href="/budgets" class="{% if request.endpoint == 'budgets_view' %}active{% endif %}">
+                <span class="icon">🎯</span>Budgets
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- PWA INSTALL BANNER -->
+<div id="install-banner">
+    <p>
+        Add FinTrack to Home Screen
+        <span>Works offline · No app store needed</span>
+    </p>
+    <div class="banner-actions">
+        <button class="btn-dismiss" id="dismissInstall">Later</button>
+        <button class="btn btn-primary" id="installBtn">Install</button>
+    </div>
+</div>
+
+<script>
+    // Hamburger menu
+    const toggle = document.getElementById('navToggle');
+    const drawer = document.getElementById('navDrawer');
+
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('open');
+        drawer.classList.toggle('open');
+    });
+
+    drawer.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+            toggle.classList.remove('open');
+            drawer.classList.remove('open');
+        });
+    });
+
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.warn('SW failed:', err));
+        });
+    }
+
+    // PWA Install prompt
+    let deferredPrompt;
+    const banner  = document.getElementById('install-banner');
+    const installBtn = document.getElementById('installBtn');
+    const dismissBtn = document.getElementById('dismissInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!sessionStorage.getItem('pwa-dismissed')) {
+            banner.style.display = 'flex';
+        }
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.style.display = 'none';
+    });
+
+    dismissBtn.addEventListener('click', () => {
+        banner.style.display = 'none';
+        sessionStorage.setItem('pwa-dismissed', '1');
+    });
+
+    window.addEventListener('appinstalled', () => {
+        banner.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>
