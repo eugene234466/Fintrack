@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import os
 
 
-BASE_DIR = os.pathdirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "finance.db")
 
 def get_connection():
